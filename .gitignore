@@ -1,0 +1,14 @@
+*.xlsx
+# Binary
+hours_signer_go
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# PDF files
+*.pdf
+
+# Signature (keep private)
+signature.png
