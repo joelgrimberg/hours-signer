@@ -1,0 +1,53 @@
+version: 2
+
+project_name: hours-signer
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: hours-signer
+    binary: hours-signer
+    main: .
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+
+brews:
+  - name: hours-signer
+    repository:
+      owner: joelgrimberg
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/joelgrimberg/hours-signer"
+    description: "A tool to add signature blocks to hours/timesheet PDFs"
+    license: "MIT"
+    install: |
+      bin.install "hours-signer"
+    test: |
+      system "#{bin}/hours-signer", "-show-config"
