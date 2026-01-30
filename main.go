@@ -359,8 +359,13 @@ func (m model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.screen = screenFilePicker
 			return m, m.filepicker.Init()
 		case "c", "2":
-			m.screen = screenSetupWelcome
-			return m, nil
+			// Pre-fill inputs with current config values
+			m.inputs[0].SetValue(m.config.SignaturePath)
+			m.inputs[1].SetValue(m.config.EmployeeName)
+			m.inputs[2].SetValue(m.config.ManagerName)
+			m.inputs[0].Focus()
+			m.screen = screenSetupSignature
+			return m, textinput.Blink
 		}
 	}
 	return m, nil
