@@ -14,14 +14,21 @@ A tool to add signature blocks to hours/timesheet PDFs. Available in both Python
 
 ## Installation
 
-### Go Version (Recommended)
+### Homebrew (macOS/Linux)
+
+```bash
+brew tap joelgrimberg/hours-signer https://github.com/joelgrimberg/hours-signer
+brew install hours-signer
+```
+
+### Build from Source
 
 ```bash
 # Build the binary
-go build -o hours_signer_go .
+go build -o hours-signer .
 
 # Optionally, move to a directory in your PATH
-mv hours_signer_go /usr/local/bin/
+mv hours-signer /usr/local/bin/
 ```
 
 ### Python Version
@@ -42,7 +49,7 @@ pip install pypdf reportlab
 Simply run without any arguments:
 
 ```bash
-./hours_signer_go
+./hours-signer
 ```
 
 On first run, a setup wizard will guide you through configuration:
@@ -60,7 +67,7 @@ After setup, use the main menu to:
 For scripting or quick use, pass flags directly:
 
 ```bash
-./hours_signer_go -input timesheet.pdf
+./hours-signer -input timesheet.pdf
 ```
 
 ## Configuration
@@ -78,7 +85,7 @@ The Go version uses a JSON config file stored at:
 Create a default config file via command line:
 
 ```bash
-./hours_signer_go -init
+./hours-signer -init
 ```
 
 This creates a config file with default values:
@@ -112,7 +119,7 @@ This creates a config file with default values:
 ### View Current Config
 
 ```bash
-./hours_signer_go -show-config
+./hours-signer -show-config
 ```
 
 ## Usage
@@ -121,16 +128,16 @@ This creates a config file with default values:
 
 ```bash
 # Basic usage (uses defaults from config or embedded values)
-./hours_signer_go -input timesheet.pdf
+./hours-signer -input timesheet.pdf
 
 # Specify output filename
-./hours_signer_go -input timesheet.pdf -output signed.pdf
+./hours-signer -input timesheet.pdf -output signed.pdf
 
 # Override employee/manager names
-./hours_signer_go -input timesheet.pdf -employee "John Doe" -manager "Jane Smith"
+./hours-signer -input timesheet.pdf -employee "John Doe" -manager "Jane Smith"
 
 # Use a specific signature file (overrides config)
-./hours_signer_go -input timesheet.pdf -signature /path/to/signature.png
+./hours-signer -input timesheet.pdf -signature /path/to/signature.png
 ```
 
 ### Python Version
