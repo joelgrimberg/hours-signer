@@ -1,6 +1,6 @@
 # Hours Signer
 
-A tool to add signature blocks to hours/timesheet PDFs. Available in both Python and Go versions.
+A tool to add signature blocks to hours/timesheet PDFs.
 
 ## Features
 
@@ -24,22 +24,8 @@ brew install hours-signer
 ### Build from Source
 
 ```bash
-# Build the binary
 go build -o hours-signer .
-
-# Optionally, move to a directory in your PATH
 mv hours-signer /usr/local/bin/
-```
-
-### Python Version
-
-```bash
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install pypdf reportlab
 ```
 
 ## Quick Start
@@ -49,11 +35,11 @@ pip install pypdf reportlab
 Simply run without any arguments:
 
 ```bash
-./hours-signer
+hours-signer
 ```
 
 On first run, a setup wizard will guide you through configuration:
-1. **Signature path** - Path to your signature image (or leave empty for embedded)
+1. **Signature path** - Path to your signature image
 2. **Employee name** - Your name
 3. **Manager name** - Your manager's name
 
@@ -67,14 +53,12 @@ After setup, use the main menu to:
 For scripting or quick use, pass flags directly:
 
 ```bash
-./hours-signer -input timesheet.pdf
+hours-signer -input timesheet.pdf
 ```
 
 ## Configuration
 
 ### Config File Location
-
-The Go version uses a JSON config file stored at:
 
 ```
 ~/.config/hours-signer/config.json
@@ -82,13 +66,11 @@ The Go version uses a JSON config file stored at:
 
 ### Initialize Config (CLI)
 
-Create a default config file via command line:
-
 ```bash
-./hours-signer -init
+hours-signer -init
 ```
 
-This creates a config file with default values:
+Creates a config file with default values:
 
 ```json
 {
@@ -119,58 +101,36 @@ This creates a config file with default values:
 ### View Current Config
 
 ```bash
-./hours-signer -show-config
+hours-signer -show-config
 ```
 
 ## Usage
 
-### Go Version
-
 ```bash
-# Basic usage (uses defaults from config or embedded values)
-./hours-signer -input timesheet.pdf
+# Basic usage
+hours-signer -input timesheet.pdf
 
 # Specify output filename
-./hours-signer -input timesheet.pdf -output signed.pdf
+hours-signer -input timesheet.pdf -output signed.pdf
 
 # Override employee/manager names
-./hours-signer -input timesheet.pdf -employee "John Doe" -manager "Jane Smith"
+hours-signer -input timesheet.pdf -employee "John Doe" -manager "Jane Smith"
 
 # Use a specific signature file (overrides config)
-./hours-signer -input timesheet.pdf -signature /path/to/signature.png
-```
-
-### Python Version
-
-```bash
-source venv/bin/activate
-python hours_signer.py -input timesheet.pdf
-python hours_signer.py -input timesheet.pdf -output signed.pdf
-python hours_signer.py -input timesheet.pdf -employee "John Doe" -manager "Jane Smith"
+hours-signer -input timesheet.pdf -signature /path/to/signature.png
 ```
 
 ## Command-Line Flags
 
-### Go Version
-
 | Flag | Description |
 |------|-------------|
-| `-input` | Input PDF file (required) |
+| `-input` | Input PDF file (required in CLI mode) |
 | `-output` | Output PDF file (default: `Urenstaat-<year>-<month>-Joel-Grimberg.pdf`) |
 | `-employee` | Employee name (default: from config) |
 | `-manager` | Manager name (default: from config) |
-| `-signature` | Path to signature image (default: from config or embedded) |
+| `-signature` | Path to signature image (default: from config) |
 | `-init` | Initialize config file with defaults |
 | `-show-config` | Show current configuration |
-
-### Python Version
-
-| Flag | Description |
-|------|-------------|
-| `-input` | Input PDF file (required) |
-| `-output` | Output PDF file (default: `Urenstaat-<year>-<month>-Joel-Grimberg.pdf`) |
-| `-employee` | Employee name (default: `Joël Grimberg`) |
-| `-manager` | Manager name (default: `Rob van der Pouw Kraan`) |
 
 ## Output
 
@@ -185,4 +145,3 @@ The tool adds to the last page of the PDF:
 - Manager: [name]
 - Datum: [empty - to be filled manually]
 - Handtekening: [empty - to be signed manually]
-
