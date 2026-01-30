@@ -41,9 +41,9 @@ brews:
   - name: hours-signer
     repository:
       owner: joelgrimberg
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    directory: Formula
+      name: hours-signer
+      branch: main
+    directory: HomebrewFormula
     homepage: "https://github.com/joelgrimberg/hours-signer"
     description: "A tool to add signature blocks to hours/timesheet PDFs"
     license: "MIT"
