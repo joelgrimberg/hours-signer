@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,6 +19,39 @@ import (
 	pdfmodel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
+
+// Version info (set via ldflags at build time)
+var (
+	version = "dev"
+)
+
+// ============================================================================
+// Version Check
+// ============================================================================
+
+type githubRelease struct {
+	TagName string `json:"tag_name"`
+}
+
+func checkLatestVersion() (string, error) {
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get("https://api.github.com/repos/joelgrimberg/hours-signer/releases/latest")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
+	}
+
+	var release githubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return "", err
+	}
+
+	return strings.TrimPrefix(release.TagName, "v"), nil
+}
 
 // ============================================================================
 // Configuration
@@ -153,9 +187,24 @@ type model struct {
 	resultMsg string
 	resultErr error
 
+	// Version info
+	latestVersion  string
+	versionChecked bool
+
 	// Window size
 	width  int
 	height int
+}
+
+// Message for async version check
+type versionCheckMsg struct {
+	latest string
+	err    error
+}
+
+func checkVersionCmd() tea.Msg {
+	latest, err := checkLatestVersion()
+	return versionCheckMsg{latest: latest, err: err}
 }
 
 func initialModel() model {
@@ -210,14 +259,22 @@ func initialModel() model {
 }
 
 func (m model) Init() tea.Cmd {
-	if m.screen == screenMain {
-		return nil
+	cmds := []tea.Cmd{checkVersionCmd}
+	if m.screen != screenMain {
+		cmds = append(cmds, textinput.Blink)
 	}
-	return textinput.Blink
+	return tea.Batch(cmds...)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case versionCheckMsg:
+		m.versionChecked = true
+		if msg.err == nil {
+			m.latestVersion = msg.latest
+		}
+		return m, nil
+
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -485,7 +542,15 @@ func (m model) viewSetupConfirm() string {
 }
 
 func (m model) viewMain() string {
-	s := titleStyle.Render("📝 Hours Signer") + "\n\n"
+	// Version display
+	versionStr := fmt.Sprintf("v%s", version)
+	if m.versionChecked && m.latestVersion != "" && m.latestVersion != version {
+		versionStr += errorStyle.Render(fmt.Sprintf(" (update available: v%s)", m.latestVersion))
+	} else if m.versionChecked && m.latestVersion == version {
+		versionStr += successStyle.Render(" (latest)")
+	}
+
+	s := titleStyle.Render("📝 Hours Signer") + " " + subtitleStyle.Render(versionStr) + "\n\n"
 
 	sigPath := m.config.SignaturePath
 	if sigPath == "" {
@@ -709,7 +774,21 @@ func runCLI() {
 	signaturePath := flag.String("signature", cfg.SignaturePath, "Path to signature image (PNG/JPG)")
 	initConfig := flag.Bool("init", false, "Initialize config file with defaults")
 	showConfig := flag.Bool("show-config", false, "Show current configuration")
+	showVersion := flag.Bool("version", false, "Show version information")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("hours-signer v%s\n", version)
+		if latest, err := checkLatestVersion(); err == nil {
+			if latest != version {
+				fmt.Printf("Update available: v%s\n", latest)
+				fmt.Println("Run: brew upgrade hours-signer")
+			} else {
+				fmt.Println("You are running the latest version")
+			}
+		}
+		os.Exit(0)
+	}
 
 	if *initConfig {
 		if err := SaveConfig(DefaultConfig()); err != nil {
