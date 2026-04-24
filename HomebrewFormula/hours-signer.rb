@@ -5,21 +5,21 @@
 class HoursSigner < Formula
   desc "A tool to add signature blocks to hours/timesheet PDFs"
   homepage "https://github.com/joelgrimberg/hours-signer"
-  version "1.0.6"
+  version "1.0.7"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.6/hours-signer_1.0.6_darwin_amd64.tar.gz"
-      sha256 "c51c1cc670b35d3cd874cd1f44acb147eee435dd4be9c6c444785092a378ab25"
+      url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.7/hours-signer_1.0.7_darwin_amd64.tar.gz"
+      sha256 "4830227681c4c2f38311fa82b464ebc336cb21c7e4570f8ca68ded7f8040bdc9"
 
       define_method(:install) do
         bin.install "hours-signer"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.6/hours-signer_1.0.6_darwin_arm64.tar.gz"
-      sha256 "b963193db23a8b40a73547b2d590b7e6feb4822155408470e8f267b3a4463f04"
+      url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.7/hours-signer_1.0.7_darwin_arm64.tar.gz"
+      sha256 "a06e74aa07b6f0dbcde3ecb04f24126feb663fa2a44657142e7f2c422078267f"
 
       define_method(:install) do
         bin.install "hours-signer"
@@ -29,15 +29,15 @@ class HoursSigner < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.6/hours-signer_1.0.6_linux_amd64.tar.gz"
-      sha256 "84d4f2699ea74027ecaed6bf31622c229657ad1745ff6de0b16ad474d63d9f41"
+      url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.7/hours-signer_1.0.7_linux_amd64.tar.gz"
+      sha256 "546c99b4f23e1a4b6a64108609a9e740a0b89bf26bdf974c5f31057ba7e02ea9"
       define_method(:install) do
         bin.install "hours-signer"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.6/hours-signer_1.0.6_linux_arm64.tar.gz"
-      sha256 "6d6a44f54c65631cd6cc622351cfb1dc1b2dc84863beca6809ea457b4da456a2"
+      url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.7/hours-signer_1.0.7_linux_arm64.tar.gz"
+      sha256 "1f98a35fb11592ff4855ea633c4c46ef49d75fc1e6ad45bc12ba8ad7a0c09f48"
       define_method(:install) do
         bin.install "hours-signer"
       end
