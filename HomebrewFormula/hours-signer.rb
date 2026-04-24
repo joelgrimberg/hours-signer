@@ -11,7 +11,7 @@ class HoursSigner < Formula
   on_macos do
     if Hardware::CPU.intel?
       url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.5/hours-signer_1.0.5_darwin_amd64.tar.gz"
-      sha256 "d4d75f6d9288a5bec57f71c082b5cfdb6eff7f1f0da8d31367a4447e7693d582"
+      sha256 "eeed03d60700f19f5564540c2067a3d943669ba17c8bf1269f7ef9b477bae5b8"
 
       define_method(:install) do
         bin.install "hours-signer"
@@ -19,7 +19,7 @@ class HoursSigner < Formula
     end
     if Hardware::CPU.arm?
       url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.5/hours-signer_1.0.5_darwin_arm64.tar.gz"
-      sha256 "3a4d808ad37fe4057fb6c14703e247712aee6c283740ef2557628c87131bcaae"
+      sha256 "de7bbcba01550da4c7c197d39842c6a6daf5d90bfc7ab63ac579fac416c0838c"
 
       define_method(:install) do
         bin.install "hours-signer"
@@ -30,14 +30,14 @@ class HoursSigner < Formula
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
       url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.5/hours-signer_1.0.5_linux_amd64.tar.gz"
-      sha256 "e670cea2b892351ccddb434f25544559c56269b59899659a0993933ba5b37bd2"
+      sha256 "cc4c004585d937b901d05a560ab482d3fb136f92620089617bb3da9bf6a06484"
       define_method(:install) do
         bin.install "hours-signer"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
       url "https://github.com/joelgrimberg/hours-signer/releases/download/v1.0.5/hours-signer_1.0.5_linux_arm64.tar.gz"
-      sha256 "b4499487d2e44251b2a7d54092665f668426ff739993ed84e42e73ac7db5683a"
+      sha256 "9a41944330b37845f625e9342aa45fb0ac146e9f47f5fbd12899e9d086462ece"
       define_method(:install) do
         bin.install "hours-signer"
       end
