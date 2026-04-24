@@ -157,11 +157,37 @@ var (
 
 	normalItemStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("252"))
+
+	signedStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("240")).
+			Italic(true)
 )
 
-// scanPDFs returns a list of PDF files in the current directory
-func scanPDFs() []string {
-	var pdfs []string
+// pdfFile represents a PDF with its signed status
+type pdfFile struct {
+	name   string
+	signed bool
+}
+
+// isPDFSigned checks if a PDF has the HoursSigned metadata property
+func isPDFSigned(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	props, err := api.Properties(f, nil)
+	if err != nil {
+		return false
+	}
+	_, exists := props["HoursSigned"]
+	return exists
+}
+
+// scanPDFs returns a list of PDF files in the current directory with signed status
+func scanPDFs() []pdfFile {
+	var pdfs []pdfFile
 	cwd, err := os.Getwd()
 	if err != nil {
 		return pdfs
@@ -172,16 +198,26 @@ func scanPDFs() []string {
 		return pdfs
 	}
 
+	var names []string
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
 		if strings.HasSuffix(strings.ToLower(entry.Name()), ".pdf") {
-			pdfs = append(pdfs, entry.Name())
+			names = append(names, entry.Name())
 		}
 	}
 
-	sort.Strings(pdfs)
+	sort.Strings(names)
+
+	for _, name := range names {
+		fullPath := filepath.Join(cwd, name)
+		pdfs = append(pdfs, pdfFile{
+			name:   name,
+			signed: isPDFSigned(fullPath),
+		})
+	}
+
 	return pdfs
 }
 
@@ -213,7 +249,7 @@ type model struct {
 	focusIndex  int
 
 	// PDF file selector
-	pdfFiles     []string
+	pdfFiles     []pdfFile
 	pdfCursor    int
 	selectedFile string
 
@@ -283,7 +319,7 @@ func initialModel() model {
 		config:       cfg,
 		configExists: configExists,
 		inputs:       inputs,
-		pdfFiles:     []string{},
+		pdfFiles:     []pdfFile{},
 		pdfCursor:    0,
 	}
 }
@@ -476,7 +512,7 @@ func (m model) updateFilePicker(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			cwd, _ := os.Getwd()
-			m.selectedFile = filepath.Join(cwd, m.pdfFiles[m.pdfCursor])
+			m.selectedFile = filepath.Join(cwd, m.pdfFiles[m.pdfCursor].name)
 			m.screen = screenSigning
 
 			// Sign the PDF
@@ -632,9 +668,17 @@ func (m model) viewFilePicker() string {
 		cursor := "  "
 		if i == m.pdfCursor {
 			cursor = "> "
-			s += selectedItemStyle.Render(cursor+pdf) + "\n"
+			s += selectedItemStyle.Render(cursor+pdf.name)
+			if pdf.signed {
+				s += signedStyle.Render(" (signed)")
+			}
+			s += "\n"
 		} else {
-			s += normalItemStyle.Render(cursor+pdf) + "\n"
+			s += normalItemStyle.Render(cursor+pdf.name)
+			if pdf.signed {
+				s += signedStyle.Render(" (signed)")
+			}
+			s += "\n"
 		}
 	}
 
@@ -798,6 +842,17 @@ func signPDF(inputPath, outputPath, employeeName, managerName, signaturePath str
 	buf.Reset()
 	if err := api.AddWatermarks(reader, &buf, pageSelection, wmManagerHandtekening, conf); err != nil {
 		return fmt.Errorf("failed to add manager handtekening label: %w", err)
+	}
+
+	// Add metadata to mark the PDF as signed
+	timestamp := time.Now().Format(time.RFC3339)
+	properties := map[string]string{
+		"HoursSigned": timestamp,
+	}
+	reader = bytes.NewReader(buf.Bytes())
+	buf.Reset()
+	if err := api.AddProperties(reader, &buf, properties, conf); err != nil {
+		return fmt.Errorf("failed to add signed metadata: %w", err)
 	}
 
 	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
