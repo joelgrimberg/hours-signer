@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -150,7 +150,40 @@ var (
 	helpStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241")).
 			MarginTop(1)
+
+	selectedItemStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("205")).
+				Bold(true)
+
+	normalItemStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("252"))
 )
+
+// scanPDFs returns a list of PDF files in the current directory
+func scanPDFs() []string {
+	var pdfs []string
+	cwd, err := os.Getwd()
+	if err != nil {
+		return pdfs
+	}
+
+	entries, err := os.ReadDir(cwd)
+	if err != nil {
+		return pdfs
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if strings.HasSuffix(strings.ToLower(entry.Name()), ".pdf") {
+			pdfs = append(pdfs, entry.Name())
+		}
+	}
+
+	sort.Strings(pdfs)
+	return pdfs
+}
 
 // ============================================================================
 // TUI Model
@@ -179,8 +212,9 @@ type model struct {
 	inputs      []textinput.Model
 	focusIndex  int
 
-	// File picker
-	filepicker   filepicker.Model
+	// PDF file selector
+	pdfFiles     []string
+	pdfCursor    int
 	selectedFile string
 
 	// Result
@@ -239,11 +273,6 @@ func initialModel() model {
 	inputs[2].CharLimit = 100
 	inputs[2].Width = 50
 
-	// File picker
-	fp := filepicker.New()
-	fp.AllowedTypes = []string{".pdf"}
-	fp.CurrentDirectory, _ = os.Getwd()
-
 	startScreen := screenMain
 	if !configExists {
 		startScreen = screenSetupWelcome
@@ -254,7 +283,8 @@ func initialModel() model {
 		config:       cfg,
 		configExists: configExists,
 		inputs:       inputs,
-		filepicker:   fp,
+		pdfFiles:     []string{},
+		pdfCursor:    0,
 	}
 }
 
@@ -413,8 +443,10 @@ func (m model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if key, ok := msg.(tea.KeyMsg); ok {
 		switch key.String() {
 		case "s", "1":
+			m.pdfFiles = scanPDFs()
+			m.pdfCursor = 0
 			m.screen = screenFilePicker
-			return m, m.filepicker.Init()
+			return m, nil
 		case "c", "2":
 			// Pre-fill inputs with current config values
 			m.inputs[0].SetValue(m.config.SignaturePath)
@@ -429,30 +461,44 @@ func (m model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) updateFilePicker(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	m.filepicker, cmd = m.filepicker.Update(msg)
+	if key, ok := msg.(tea.KeyMsg); ok {
+		switch key.String() {
+		case "up", "k":
+			if m.pdfCursor > 0 {
+				m.pdfCursor--
+			}
+		case "down", "j":
+			if m.pdfCursor < len(m.pdfFiles)-1 {
+				m.pdfCursor++
+			}
+		case "enter":
+			if len(m.pdfFiles) == 0 {
+				return m, nil
+			}
+			cwd, _ := os.Getwd()
+			m.selectedFile = filepath.Join(cwd, m.pdfFiles[m.pdfCursor])
+			m.screen = screenSigning
 
-	if didSelect, path := m.filepicker.DidSelectFile(msg); didSelect {
-		m.selectedFile = path
-		m.screen = screenSigning
+			// Sign the PDF
+			now := time.Now()
+			output := fmt.Sprintf("Urenstaat-%d-%02d-signed.pdf", now.Year(), now.Month())
 
-		// Sign the PDF
-		now := time.Now()
-		output := fmt.Sprintf("Urenstaat-%d-%02d-signed.pdf", now.Year(), now.Month())
-
-		err := signPDF(path, output, m.config.EmployeeName, m.config.ManagerName, m.config.SignaturePath)
-		if err != nil {
-			m.resultErr = err
-			m.resultMsg = ""
-		} else {
-			m.resultErr = nil
-			m.resultMsg = output
+			err := signPDF(m.selectedFile, output, m.config.EmployeeName, m.config.ManagerName, m.config.SignaturePath)
+			if err != nil {
+				m.resultErr = err
+				m.resultMsg = ""
+			} else {
+				m.resultErr = nil
+				m.resultMsg = output
+			}
+			m.screen = screenResult
+			return m, nil
+		case "esc":
+			m.screen = screenMain
+			return m, nil
 		}
-		m.screen = screenResult
-		return m, nil
 	}
-
-	return m, cmd
+	return m, nil
 }
 
 func (m model) updateResult(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -575,8 +621,24 @@ func (m model) viewMain() string {
 
 func (m model) viewFilePicker() string {
 	s := titleStyle.Render("📂 Select PDF File") + "\n\n"
-	s += m.filepicker.View() + "\n\n"
-	s += helpStyle.Render("Enter to select • Esc to cancel")
+
+	if len(m.pdfFiles) == 0 {
+		s += errorStyle.Render("No PDF files found in current directory") + "\n\n"
+		s += helpStyle.Render("Esc to go back")
+		return s
+	}
+
+	for i, pdf := range m.pdfFiles {
+		cursor := "  "
+		if i == m.pdfCursor {
+			cursor = "> "
+			s += selectedItemStyle.Render(cursor+pdf) + "\n"
+		} else {
+			s += normalItemStyle.Render(cursor+pdf) + "\n"
+		}
+	}
+
+	s += "\n" + helpStyle.Render("↑/↓ to navigate • Enter to select • Esc to cancel")
 	return s
 }
 
