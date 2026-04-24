@@ -10,7 +10,7 @@ A tool to add signature blocks to hours/timesheet PDFs.
 - Pre-fills employee date with current date (Dutch format: dd-mm-yyyy)
 - Embeds employee signature image
 - Configurable via config file or command-line flags
-- Output filename defaults to `Urenstaat-<year>-<month>-Joel-Grimberg.pdf`
+- Output filename defaults to `Urenstaat-<year>-<month>-signed.pdf`
 
 ## Installation
 
@@ -75,8 +75,8 @@ Creates a config file with default values:
 ```json
 {
   "signature_path": "~/.config/hours-signer/signature.png",
-  "employee_name": "Joël Grimberg",
-  "manager_name": "Rob van der Pouw Kraan"
+  "employee_name": "Your Name",
+  "manager_name": "Manager Name"
 }
 ```
 
@@ -85,8 +85,8 @@ Creates a config file with default values:
 | Option | Description | Default |
 |--------|-------------|---------|
 | `signature_path` | Path to signature image (PNG/JPG). **Required.** | `""` |
-| `employee_name` | Default employee name | `"Joël Grimberg"` |
-| `manager_name` | Default manager name | `"Rob van der Pouw Kraan"` |
+| `employee_name` | Your name for the signature block | `""` |
+| `manager_name` | Manager's name for the signature block | `""` |
 
 ### Setting Up Your Signature
 
@@ -125,7 +125,7 @@ hours-signer -input timesheet.pdf -signature /path/to/signature.png
 | Flag | Description |
 |------|-------------|
 | `-input` | Input PDF file (required in CLI mode) |
-| `-output` | Output PDF file (default: `Urenstaat-<year>-<month>-Joel-Grimberg.pdf`) |
+| `-output` | Output PDF file (default: `Urenstaat-<year>-<month>-signed.pdf`) |
 | `-employee` | Employee name (default: from config) |
 | `-manager` | Manager name (default: from config) |
 | `-signature` | Path to signature image (default: from config) |

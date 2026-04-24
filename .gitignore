@@ -1,4 +1,8 @@
 *.xlsx
+
+# macOS
+.DS_Store
+
 # Binary
 hours_signer_go
 

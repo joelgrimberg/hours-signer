@@ -66,8 +66,8 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		SignaturePath: "",
-		EmployeeName:  "Joël Grimberg",
-		ManagerName:   "Rob van der Pouw Kraan",
+		EmployeeName:  "",
+		ManagerName:   "",
 	}
 }
 
@@ -227,14 +227,14 @@ func initialModel() model {
 
 	// Employee name input
 	inputs[1] = textinput.New()
-	inputs[1].Placeholder = "Joël Grimberg"
+	inputs[1].Placeholder = "Your Name"
 	inputs[1].SetValue(cfg.EmployeeName)
 	inputs[1].CharLimit = 100
 	inputs[1].Width = 50
 
 	// Manager name input
 	inputs[2] = textinput.New()
-	inputs[2].Placeholder = "Rob van der Pouw Kraan"
+	inputs[2].Placeholder = "Manager Name"
 	inputs[2].SetValue(cfg.ManagerName)
 	inputs[2].CharLimit = 100
 	inputs[2].Width = 50
@@ -438,7 +438,7 @@ func (m model) updateFilePicker(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Sign the PDF
 		now := time.Now()
-		output := fmt.Sprintf("Urenstaat-%d-%02d-Joel-Grimberg.pdf", now.Year(), now.Month())
+		output := fmt.Sprintf("Urenstaat-%d-%02d-signed.pdf", now.Year(), now.Month())
 
 		err := signPDF(path, output, m.config.EmployeeName, m.config.ManagerName, m.config.SignaturePath)
 		if err != nil {
@@ -768,7 +768,7 @@ func runCLI() {
 	cfg := LoadConfig()
 
 	inputFile := flag.String("input", "", "Input PDF file (required)")
-	outputFile := flag.String("output", "", "Output PDF file (default: Urenstaat-<year>-<month>-Joel-Grimberg.pdf)")
+	outputFile := flag.String("output", "", "Output PDF file (default: Urenstaat-<year>-<month>-signed.pdf)")
 	employeeName := flag.String("employee", cfg.EmployeeName, "Employee name")
 	managerName := flag.String("manager", cfg.ManagerName, "Manager name")
 	signaturePath := flag.String("signature", cfg.SignaturePath, "Path to signature image (PNG/JPG)")
@@ -820,7 +820,7 @@ func runCLI() {
 	output := *outputFile
 	if output == "" {
 		now := time.Now()
-		output = fmt.Sprintf("Urenstaat-%d-%02d-Joel-Grimberg.pdf", now.Year(), now.Month())
+		output = fmt.Sprintf("Urenstaat-%d-%02d-signed.pdf", now.Year(), now.Month())
 	}
 
 	if err := signPDF(*inputFile, output, *employeeName, *managerName, *signaturePath); err != nil {
