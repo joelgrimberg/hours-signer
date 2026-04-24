@@ -159,8 +159,7 @@ var (
 			Foreground(lipgloss.Color("252"))
 
 	signedStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("240")).
-			Italic(true)
+			Foreground(lipgloss.Color("82"))
 )
 
 // pdfFile represents a PDF with its signed status
